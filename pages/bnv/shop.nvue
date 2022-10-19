@@ -1,0 +1,347 @@
+<template>
+	<view>
+		<swiper class="swiper" :circular="true" :autoplay="true" :indicator-dots="true"
+			:indicator-color="indicatorColor" :indicator-active-color="indicatorActiveColor">
+			<swiper-item v-for="(item,index) in bannerList" :key="index">
+				<view class="swiper-item">
+					<image class="swiper-item-image" v-bind:src="item.url"></image>
+				</view>
+			</swiper-item>
+		</swiper>
+		<view class="classify">
+			<view class="item" v-for="(item,index) in classifyList" :key="item.type" v-on:click="classifyItemClick(item)">
+				<image class="item-image" v-bind:src="item.icon" mode="aspectFill"></image>
+				<text class="item-text">{{item.title}}</text>
+			</view>
+		</view>
+		<view class="small-money" v-on:click="getMoneyClick()" v-if="isNew">
+			<image class="small-money-image" src="../../static/pic/xinshouquan.png"></image>
+		</view>
+		<view class="space"></view>
+		<view class="shop" v-for="(item,index) in shopList" :key="item.number" @click="itemClick(item)">
+			<image class="shop-image" v-bind:src="item.icon"></image>
+			<view class="layout">
+				<text class="title txt-max-1">{{item.title}}</text>
+				<text class="content txt-max-1">{{item.content}}</text>
+				<text class="auth txt-max-1">{{item.auth}} 发布于 {{item.createTime}}</text>
+				<view style="flex: 1;"></view>
+				<view class="bottom">
+					<text class="bottom-text">{{item.number}}猿币</text>
+					<!-- #ifdef H5 -->
+					<text class="bottom-button" @click.stop.prevent="addCar(item)">加入购物车</text>
+					<!-- #endif -->
+					<!-- #ifndef H5 -->
+					<text class="bottom-button" @touchmove.stop.prevent="addCar(item)">加入购物车</text>
+					<!-- #endif -->
+				</view>
+			</view>
+		</view>
+		<NoLoadMoreView></NoLoadMoreView>
+		<!-- 登录弹窗 -->
+		<view>
+			<uni-popup ref="loginDialog">
+				<LoginDialog @loginSuccess="loginSuccess()" @dissmisDialog="dissmisLoginDialog()"/>
+			</uni-popup>
+		</view>
+		<!-- 客服弹窗  -->
+		<view>
+			<uni-popup ref="tel">
+				<TelDialog @dissmisTelDialog="dissmisTelDialog()"/>
+			</uni-popup>
+		</view>
+	</view>
+</template>
+
+<script>
+	import TelDialog from '../dialog/telDialog.vue';
+	import LoginDialog from '../dialog/loginDialog.vue';
+	import NoLoadMoreView from '../../components/no_load_more.vue';
+	import UserUtil from '../../util/userUtil.js';
+	import MsgUtil from '../../util/msg.js';
+	export default {
+		components: {TelDialog,LoginDialog,NoLoadMoreView},
+		data() {
+			return {
+				indicatorColor: 'white',
+				indicatorActiveColor: '#007AFF',
+				bannerList: [
+					{ url: "https://img13.360buyimg.com/mobilecms/s710x334_jfs/t1/213708/30/1992/177988/6177f1ddEb1f03f67/413dc2563534e2a4.jpg!cc_710x334!q70.dpg.webp", content: "LOL-莲华-手办" },
+					{ url: "https://img13.360buyimg.com/mobilecms/s710x334_jfs/t1/210133/17/5922/347509/616e545cE57009ebd/269fe4701eea6d98.jpg!cc_710x334!q70.dpg.webp", content: "外星人游戏本" },
+					{ url: "https://img13.360buyimg.com/mobilecms/s710x334_jfs/t1/155620/18/23267/88144/617f8f47Ec7d18095/47e9cfcc896c5a0a.jpg!cc_710x334!q70.dpg.webp", content: "鼠标" },
+					{ url: "https://img13.360buyimg.com/mobilecms/s710x334_jfs/t1/206779/4/6982/500987/6177b53fEf2152a50/8ed888236997efae.gif", content: "牙膏" }
+				],
+				classifyList:[
+					{ icon: "../../static/pic/reai.png", title: "100%热爱", type: "1" },
+					{ icon: "../../static/pic/xuni.png", title: "虚拟", type: "2" },
+					{ icon: "../../static/pic/tushu.png", title: "图书", type: "3" },
+					{ icon: "../../static/pic/jiankang.png", title: "健康", type: "4" }
+				],
+				isNew: true,
+				shopList:[ // 推荐商品，最多10个
+					{ 
+						icon: "https://img12.360buyimg.com/n2/s240x240_jfs/t1/132711/10/11289/111649/5f73f06fEdbe1e80c/b58c0f2e4694914d.jpg!q70.jpg", 
+						title: "华硕 ASUS TUF-RTX3090-O24G-GAMING 1740-1770MHz", 
+						content: "赛博朋克电竞游戏专业独立显卡 可支持8K显示器", 
+						number: 149999, auth: "官方", createTime: "2021-10-20", id: "129109201"
+					},
+					{ 
+						icon: "https://img13.360buyimg.com/n2/s240x240_jfs/t1/200604/6/15475/154104/6180868dE9aa83133/35a8834a406f2220.jpg!q70.jpg",
+						title: "外星人ALIENWARE m15 R6 15.6英寸高端游戏本", 
+						content: "8核i7 16G 512G RTX3050Ti 165Hz高刷屏 轻薄笔记本电脑1752B", 
+						number: 99999, auth: "官方", createTime: "2021-10-21", id: "129109211"
+					},
+					{
+						icon: "https://img10.360buyimg.com/n2/s240x240_jfs/t1/218534/31/2188/73388/617a75b0Eb38a296a/014cfecfa08e073b.jpg!q70.jpg", 
+						title: "三星 SAMSUNG Galaxy Z Flip3 5G（SM-F7110）",
+						content: "折叠屏 双模5G手机IPX8防水 8GB+256GB米色 月光香槟", 
+						number: 73999, auth: "官方", createTime: "2021-10-30", id: "139109201"
+					},
+					{
+						icon: "https://img12.360buyimg.com/n2/s240x240_jfs/t1/197359/21/15380/94738/617e8736E5ddea11f/acbe31f14877f75f.jpg!q70.jpg",
+						title: "DJI 大疆 DJI Mini 2", 
+						content: "畅飞套装 航拍小飞机 便携可折叠无人机航拍器 轻盈小巧 性能强大", 
+						number: 37980, auth: "官方", createTime: "2021-10-30", id: "1291032201"
+					},
+					{
+						icon: "https://img10.360buyimg.com/n2/s240x240_jfs/t202/26/1780252325/591844/12288f23/53bb403eN5371d3c9.jpg!q70.jpg",
+						title: "腾讯英雄联盟1元，LOL英雄联盟点券1元100点 按元充 24小时自动充值", 
+						content: "腾讯英雄联盟1元，LOL英雄联盟点券1元100点 按元充 24小时自动充值", 
+						number: 10, auth: "meimei", createTime: "2021-10-31", id: "120909201"
+					},
+					{
+						icon: "https://img11.360buyimg.com/n2/s240x240_jfs/t1/216535/32/2487/145752/617e2858Eb40110e1/c8c47464fa565fd8.jpg!q70.jpg",
+						title: " LOL 英雄联盟 洛与霞情侣手链", 
+						content: " LOL 英雄联盟 洛与霞情侣手链经典款 游戏周边 官方旗舰 经典款 情侣手链", 
+						number: 3999, auth: "99id", createTime: "2021-11-1", id: "329126201"
+					},
+					{
+						icon: "https://img10.360buyimg.com/n2/s240x240_jfs/t1/117943/21/3633/264618/5ea934edE29323e7d/6c2ea81ea081cdb7.jpg!q70.jpg",
+						title: "免疫功能90天复原方案", 
+						content: "国际功能医学奠基著作，附赠20堂音频课程。免疫力，才是最好的医生，是远离疾病的终极密钥。", 
+						number: 780, auth: "goodDt", createTime: "2021-10-31", id: "100109201"
+					},
+					{
+						icon: "https://img13.360buyimg.com/n2/s270x270_jfs/t1/170220/39/22840/186115/617fe4cbEbe05b9b0/d3e63c22200c15ce.jpg!q70.dpg",
+						title: "汤臣倍健 胶原蛋白软骨素钙片礼盒", 
+						content: "骨胶原 成人钙片增加骨密度补钙180片", 
+						number: 1399, auth: "goodDt", createTime: "2021-10-31", id: "136988501"
+					},
+					{
+						icon: "../../static/pic/my_header.jpg",
+						title: "万象资源管理员充值", content: "网吧万象后台管理系统", 
+						number: 100, auth: "wb-100", createTime: "2021-9-31", id: "209109201"
+					},
+					{
+						icon: "../../static/pic/my_header.jpg",
+						title: "万象资源管理员充值", content: "网吧万象后台管理系统", 
+						number: 2000, auth: "wb-100", createTime: "2021-10-31", id: "209109202"
+					}
+				]
+			}
+		},
+		methods: {
+			rightClick: function() {
+				this.$refs.tel.open("bottom")
+			},
+			classifyItemClick: function(item) {
+				uni.navigateTo({
+					url: "../shop/shop_list?type=" + item.type
+				})
+			},
+			itemClick: function(item) {
+				uni.navigateTo({
+					url: "../shop/shop_info?shopId=" + item.id
+				})
+			},
+			addCar: function(item) {
+				if (UserUtil.isLogin()) {
+					MsgUtil.toast("添加成功")
+				} else {
+					this.$refs.loginDialog.open("center")
+					MsgUtil.toast("请先去登录！")
+				}
+			},
+			getMoneyClick: function() {
+				if (UserUtil.isLogin()) {
+					MsgUtil.toast("领取成功")
+				} else {
+					this.$refs.loginDialog.open("center")
+					MsgUtil.toast("请先去登录！")
+				}
+			},
+			dissmisTelDialog: function() {
+				this.$refs.tel.close()
+			},
+			dissmisLoginDialog: function() {
+				this.$refs.loginDialog.close()
+			},
+			loginSuccess: function() {
+				this.dissmisLoginDialog()
+			}
+		},
+		onPullDownRefresh() { // 下拉刷新
+			setTimeout(() => {
+				uni.stopPullDownRefresh()
+			}, 500)
+		},
+		onNavigationBarButtonTap() { // 右侧编辑点击
+			this.rightClick()
+		},
+		onLoad: function(option) {
+			var type = uni.getSystemInfoSync().platform
+			MsgUtil.log("type --- " + type)
+		}
+	}
+</script>
+
+<style lang="scss">
+	
+	// page {
+	// 	background: $uni-bg-color;
+	// }
+	
+	.swiper {
+		/* #ifdef H5 */
+		width: 100%;
+		/* #endif */
+		height: 200px;
+		
+		.swiper-item {
+			background-color: $uni-bg-color;
+		}
+		.swiper-item-image {
+			/* #ifdef H5 */
+			width: 100%;
+			/* #endif */
+			height: 200px;
+		}
+	}
+	
+	.classify {
+		display: flex;
+		flex-direction: row;
+		background-color: #FFFFFF;
+		height: 70px;
+		
+		.item {
+			flex: 1;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			
+			.item-image {
+				width: 30px;
+				height: 30px;
+			}
+			.item-text {
+				margin-top: 5px;
+				color: #000000;
+				font-size: 13px;
+			}
+		}
+	}
+	
+	.small-money {
+		margin-top: 10px;
+		padding-bottom: 10px;
+		height: 130px;
+		background-color: #FFFFFF;
+		display: flex;
+		flex-direction: column;
+		
+		.small-money-image {
+			width: calc(100% - 20px);
+			height: 110px;
+			margin-top: 10px;
+			margin-left: 10px;
+			margin-right: 10px;
+		}
+	}
+	
+	.space {
+		height: 10px;
+	}
+	
+	.shop {
+		height: 120px;
+		background-color: #FFFFFF;
+		margin-bottom: 1px;
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+		padding-left: 12px;
+		padding-right: 12px;
+		.shop-image {
+			width: 120px;
+			height: 100px;
+			margin-right: 10px;
+		}
+		.layout {
+			flex: 1;
+			flex-direction: column;
+			height: 100px;
+			.title {
+				color: #000000;
+				font-size: 16px;
+			}
+			.content {
+				color: #808080;
+				font-size: 14px;
+				margin-top: 3px;
+			}
+			.auth {
+				color: #91919C;
+				font-size: 12px;
+				margin-top: 3px;
+			}
+			.bottom {
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+				.bottom-text {
+					color: #007AFF;
+					font-size: 13px;
+					font-weight: bold;
+				}
+				.bottom-button {
+					background-color: #007AFF;
+					font-size: 12px;
+					color: #FFFFFF;
+					height: 25px;
+					line-height: 25px;
+					padding-left: 6px;
+					padding-right: 6px;
+					line-height: 25px;
+					border-radius: 3px;
+					border-style: none;
+				}
+			}
+		}
+	}
+	
+	.no-more-txt {
+		color: #91919C;
+		height: 40px;
+		line-height: 40px;
+		font-size: 12px;
+		text-align: center;
+	}
+	
+	.mask {
+		z-index: 10;
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(0, 0, 0, 0);
+		transition: background-color .15s linear;
+		&.show {
+			background-color: rgba(0, 0, 0, 0.5);
+		}
+		&.hide {
+			display: none;
+		}
+	}
+</style>

@@ -1,0 +1,221 @@
+<template>
+	<view style="margin-top: 10px;">
+		<!-- slot="body"  -->
+		<view class="list-body" v-for="(item,index) in tickerList" :key="index">
+			<view class="left-layout"
+				v-bind:class="[item.status == 2 || item.status == 3 ? 'failed-layout' : 'yes-layout']">
+				<image class="pic" src="../../static/pic/ticker.png"></image>
+				<text class="price">{{item.jianPrice}}</text>
+				<text class="price-jian">满{{item.manPrice}}猿币</text>
+			</view>
+			<view class="right-layout">
+				<text class="txt1" v-bind:class="[item.status == 2 || item.status == 3 ? 'failed-color' : 'yes-color']">{{getTypeByType(item.type)}}</text>
+				<text class="txt2">{{item.time}}</text>
+				<image v-if="item.status == 1" class="qiu" src="../../static/pic/qiqiu.png"></image>
+				<image v-if="item.status == 2" class="state" src="../../static/pic/ticker_status.png"></image>
+				<image v-if="item.status == 3" class="state" src="../../static/pic/ticker_status1.png"></image>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	const TYPE_ANY = 0;
+	const TYPE_DIAN = 1;
+	const TYPE_XL = 2;
+	const TYPE_TS = 3;
+	const TYPE_JK = 4;
+
+	export default {
+		data() {
+			return {
+				tickerList: [{
+						status: 1,
+						jianPrice: 20,
+						manPrice: 100,
+						type: 0,
+						time: "2021/12/1 23:59:59前使用"
+					},
+					{
+						status: 1,
+						jianPrice: 200,
+						manPrice: 5000,
+						type: 1,
+						time: "2021/12/1 23:59:59前使用"
+					},
+					{
+						status: 1,
+						jianPrice: 20,
+						manPrice: 100,
+						type: 2,
+						time: "2021/12/1 23:59:59前使用"
+					},
+					{
+						status: 1,
+						jianPrice: 20,
+						manPrice: 100,
+						type: 3,
+						time: "2021/12/1 23:59:59前使用"
+					},
+					{
+						status: 1,
+						jianPrice: 20,
+						manPrice: 100,
+						type: 4,
+						time: "2021/12/1 23:59:59前使用"
+					},
+					{
+						status: 1,
+						jianPrice: 20,
+						manPrice: 100,
+						type: 0,
+						time: "2021/12/1 23:59:59前使用"
+					},
+					{
+						status: 2,
+						jianPrice: 20,
+						manPrice: 100,
+						type: 1,
+						time: "2021/12/1 23:59:59前使用"
+					},
+					{
+						status: 3,
+						jianPrice: 20,
+						manPrice: 100,
+						type: 1,
+						time: "2021/11/11 23:59:59前使用"
+					}
+				]
+			}
+		},
+		methods: {
+			getTypeByType: function(type) {
+				var str = ""
+				switch (type) {
+					case TYPE_ANY:
+						str = "全品类使用"
+						break;
+					case TYPE_DIAN:
+					 str = "限购买电子产品使用"
+						break;
+					case TYPE_XL:
+						str = "限购买虚拟物品使用"
+						break;
+					case TYPE_TS:
+						str = "限购买图书物品使用"
+						break;
+					case TYPE_JK:
+						str = "限购买健康产品使用"
+						break;
+				}
+				return str
+			}
+		},
+		onPullDownRefresh() { // 下拉刷新
+			var that = this
+			setTimeout(() => {
+				uni.stopPullDownRefresh()
+			}, 500)
+		}
+	}
+</script>
+
+<style lang="scss">
+	$itemHeight: 90px;
+	$radius: 10px;
+
+	.list-body {
+		display: flex;
+		flex-direction: row;
+		height: $itemHeight;
+		background-color: #FFFFFF;
+		border-radius: $radius;
+		margin-bottom: 10px;
+		margin-left: 13px;
+		margin-right: 13px;
+
+		.left-layout {
+			width: 110px;
+			height: $itemHeight;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			border-top-left-radius: $radius;
+			border-bottom-left-radius: $radius;
+
+			.pic {
+				position: absolute;
+				width: 20px;
+				height: 20px;
+				top: 0;
+				right: 0;
+			}
+
+			.price {
+				color: #FFFFFF;
+				font-weight: bold;
+				font-size: 25px;
+			}
+
+			.price-jian {
+				color: #FFFFFF;
+				font-size: 13px;
+				margin-top: 3px;
+			}
+		}
+
+		.right-layout {
+			display: flex;
+			flex-direction: column;
+			flex: 1;
+			justify-content: center;
+			align-items: flex-start;
+
+			.qiu {
+				position: absolute;
+				width: 30px;
+				height: 30px;
+				right: 0;
+				top: 0;
+			}
+
+			.state {
+				position: absolute;
+				width: 70px;
+				height: 70px;
+				top: 0;
+				right: 0;
+			}
+
+			.txt1 {
+				font-size: 14px;
+				margin-left: 15px;
+				z-index: 1;
+			}
+
+			.txt2 {
+				font-size: 12px;
+				margin-left: 15px;
+				color: #91919C;
+				margin-top: 5px;
+				z-index: 1;
+			}
+		}
+	}
+
+	.yes-layout {
+		background-color: #007AFF;
+	}
+
+	.failed-layout {
+		background-color: #91919C;
+	}
+
+	.yes-color {
+		color: #000000;
+	}
+
+	.failed-color {
+		color: #91919C;
+	}
+</style>

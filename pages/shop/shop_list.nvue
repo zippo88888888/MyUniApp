@@ -1,0 +1,420 @@
+<template>
+	<view>
+		<view class="serarch-layout">
+			<view class="search-left">
+				<image class="searc-icon" src="../../static/pic/search.png"></image>
+				<input class="searc-edit" @focus="focus()" v-model="keyStr" type="text" placeholder-style="color:#91919C" placeholder="请输入关键字" maxlength="20" confirm-type="search"/>
+			</view>
+			<text @click="search()" class="searc-txt">搜索</text>
+		</view>
+		<view class="search-layout2">
+			<view class="search-pop1" @click="pop1Click()">
+				<text class="pop-txt" v-bind:class="[listIndex == 1 ? 'selected-txt' : 'un-selected-txt']">{{list1SelectedBean.value}}</text>
+				<image class="pop-icon" src="../../static/pic/down.png"></image>
+			</view>
+			<view class="search-pop1" @click="pop2Click()">
+				<text class="pop-txt" v-bind:class="[listIndex == 2 ? 'selected-txt' : 'un-selected-txt']">{{list2SelectedBean.value}}</text>
+				<image class="pop-icon" src="../../static/pic/down.png"></image>
+			</view>
+			<view class="search-pop1" @click="pop3Click()">
+				<text class="pop-txt" v-bind:class="[listIndex == 3 ? 'selected-txt' : 'un-selected-txt']">{{list3SelectedBean.value}}</text>
+				<image class="pop-icon" src="../../static/pic/down.png"></image>
+			</view>
+		</view>
+		<view class="shop-margin"></view>
+		<view class="shop" v-for="(item,index) in shopList" :key="item.number" @click="itemClick(item)">
+			<image class="shop-image" v-bind:src="item.icon"></image>
+			<view class="layout">
+				<text class="title txt-max-1">{{item.title}}</text>
+				<text class="content txt-max-1">{{item.content}}</text>
+				<text class="auth txt-max-1">{{item.auth}} 发布于 {{item.createTime}}</text>
+				<view style="flex: 1;"></view>
+				<view class="bottom">
+					<text class="bottom-text">{{item.number}}猿币</text>
+					<!-- #ifdef H5 -->
+					<text class="bottom-button" @click.stop.prevent="addCar(item)">加入购物车</text>
+					<!-- #endif -->
+					<!-- #ifndef H5 -->
+					<text class="bottom-button" @touchmove.stop.prevent="addCar(item)">加入购物车</text>
+					<!-- #endif -->
+				</view>
+			</view>
+		</view>
+		<NoLoadMoreView></NoLoadMoreView>
+		<ClassifyDialog :listIndex="listIndex" :selectedIndex1="list1SelectedBean.selectedIndex" :selectedIndex2="list2SelectedBean.selectedIndex"
+			:selectedIndex3="list3SelectedBean.selectedIndex" :classifyList="list3" :show="classifyDialogShow"
+			@closeClassifyDialog="closeClassifyDialog()" @onClassifySelected="onClassifySelected">
+		</ClassifyDialog>
+		<!-- 登录弹窗 -->
+		<view>
+			<uni-popup ref="loginDialog">
+				<LoginDialog @loginSuccess="loginSuccess()" @dissmisDialog="dissmisLoginDialog()"/>
+			</uni-popup>
+		</view>
+	</view>
+</template>
+
+<script>
+	import NoLoadMoreView from '../../components/no_load_more.vue';
+	import LoginDialog from '../dialog/loginDialog.vue';
+	import ClassifyDialog from '../dialog/classifyDialog.vue';
+	import UserUtil from '../../util/userUtil.js';
+	import MsgUtil from '../../util/msg.js';
+	export default {
+		components: {NoLoadMoreView, LoginDialog, ClassifyDialog},
+		data() {
+			return {
+				type: 1, // 1:100%热爱; 2:虚拟; 3:图书; 4:健康
+				keyStr: "",
+				list3: [ // 分类数据，接口访问
+					{type: -1, value: "全部"},
+					{type: 1, value: "100%热爱"}, {type: 2, value: "虚拟"},
+					{type: 3, value: "图书"}, {type: 4, value: "健康"},
+				],
+				list1SelectedBean: {
+					selectedIndex: 0, type: 1, value: "综合"
+				},
+				list2SelectedBean: {
+					selectedIndex: 0, type: 1, value: "价格"
+				},
+				list3SelectedBean: {
+					selectedIndex: -1, type: -1, value: "分类"
+				},
+				listIndex: -1, // 1；2；3
+				classifyDialogShow: false,
+				upIcon: "../../static/pic/up.png",
+				downIcon: "../../static/pic/down.png",
+				shopList: [
+					{ 
+						icon: "https://img12.360buyimg.com/n2/s240x240_jfs/t1/132711/10/11289/111649/5f73f06fEdbe1e80c/b58c0f2e4694914d.jpg!q70.jpg", 
+						title: "华硕 ASUS TUF-RTX3090-O24G-GAMING 1740-1770MHz", 
+						content: "赛博朋克电竞游戏专业独立显卡 可支持8K显示器", 
+						number: 149999, auth: "官方", createTime: "2021-10-20", id: "129109201"
+					},
+					{ 
+						icon: "https://img13.360buyimg.com/n2/s240x240_jfs/t1/200604/6/15475/154104/6180868dE9aa83133/35a8834a406f2220.jpg!q70.jpg",
+						title: "外星人ALIENWARE m15 R6 15.6英寸高端游戏本", 
+						content: "8核i7 16G 512G RTX3050Ti 165Hz高刷屏 轻薄笔记本电脑1752B", 
+						number: 99999, auth: "官方", createTime: "2021-10-21", id: "129109211"
+					},
+					{
+						icon: "https://img10.360buyimg.com/n2/s240x240_jfs/t1/218534/31/2188/73388/617a75b0Eb38a296a/014cfecfa08e073b.jpg!q70.jpg", 
+						title: "三星 SAMSUNG Galaxy Z Flip3 5G（SM-F7110）",
+						content: "折叠屏 双模5G手机IPX8防水 8GB+256GB米色 月光香槟", 
+						number: 73999, auth: "官方", createTime: "2021-10-30", id: "139109201"
+					},
+					{
+						icon: "https://img12.360buyimg.com/n2/s240x240_jfs/t1/197359/21/15380/94738/617e8736E5ddea11f/acbe31f14877f75f.jpg!q70.jpg",
+						title: "DJI 大疆 DJI Mini 2", 
+						content: "畅飞套装 航拍小飞机 便携可折叠无人机航拍器 轻盈小巧 性能强大", 
+						number: 37980, auth: "官方", createTime: "2021-10-30", id: "1291032201"
+					},
+					{
+						icon: "https://img10.360buyimg.com/n2/s240x240_jfs/t202/26/1780252325/591844/12288f23/53bb403eN5371d3c9.jpg!q70.jpg",
+						title: "腾讯英雄联盟1元，LOL英雄联盟点券1元100点 按元充 24小时自动充值", 
+						content: "腾讯英雄联盟1元，LOL英雄联盟点券1元100点 按元充 24小时自动充值", 
+						number: 10, auth: "meimei", createTime: "2021-10-31", id: "120909201"
+					},
+					{
+						icon: "https://img11.360buyimg.com/n2/s240x240_jfs/t1/216535/32/2487/145752/617e2858Eb40110e1/c8c47464fa565fd8.jpg!q70.jpg",
+						title: " LOL 英雄联盟 洛与霞情侣手链", 
+						content: " LOL 英雄联盟 洛与霞情侣手链经典款 游戏周边 官方旗舰 经典款 情侣手链", 
+						number: 3999, auth: "99id", createTime: "2021-11-1", id: "329126201"
+					},
+					{
+						icon: "https://img10.360buyimg.com/n2/s240x240_jfs/t1/117943/21/3633/264618/5ea934edE29323e7d/6c2ea81ea081cdb7.jpg!q70.jpg",
+						title: "免疫功能90天复原方案", 
+						content: "国际功能医学奠基著作，附赠20堂音频课程。免疫力，才是最好的医生，是远离疾病的终极密钥。", 
+						number: 780, auth: "goodDt", createTime: "2021-10-31", id: "100109201"
+					},
+					{
+						icon: "https://img13.360buyimg.com/n2/s270x270_jfs/t1/170220/39/22840/186115/617fe4cbEbe05b9b0/d3e63c22200c15ce.jpg!q70.dpg",
+						title: "汤臣倍健 胶原蛋白软骨素钙片礼盒", 
+						content: "骨胶原 成人钙片增加骨密度补钙180片", 
+						number: 1399, auth: "goodDt", createTime: "2021-10-31", id: "136988501"
+					},
+					{
+						icon: "../../static/pic/my_header.jpg",
+						title: "万象资源管理员充值", content: "网吧万象后台管理系统", 
+						number: 100, auth: "wb-100", createTime: "2021-9-31", id: "209109201"
+					},
+					{
+						icon: "../../static/pic/my_header.jpg",
+						title: "万象资源管理员充值", content: "网吧万象后台管理系统", 
+						number: 2000, auth: "wb-100", createTime: "2021-10-31", id: "209109202"
+					}
+				]
+			}
+		},
+		methods: {
+			focus: function() {
+				this.classifyDialogShow = false
+			},
+			search: function() {
+				this.classifyDialogShow = false
+			},
+			pop1Click: function() {
+				if (this.listIndex != 1) {
+					this.classifyDialogShow = true
+				} else {
+					this.classifyDialogShow = !this.classifyDialogShow
+				}
+				this.listIndex = 1
+				uni.hideKeyboard()
+			},
+			pop2Click: function() {
+				if (this.listIndex != 2) {
+					this.classifyDialogShow = true
+				} else {
+					this.classifyDialogShow = !this.classifyDialogShow
+				}
+				this.listIndex = 2
+				uni.hideKeyboard()
+			},
+			pop3Click: function() {
+				if (this.listIndex != 3) {
+					this.classifyDialogShow = true
+				} else {
+					this.classifyDialogShow = !this.classifyDialogShow
+				}
+				this.listIndex = 3
+				uni.hideKeyboard()
+			},
+			itemClick: function(item) {
+				uni.navigateTo({
+					url: "../shop/shop_info?shopId=" + item.id
+				})
+			},
+			addCar: function(item) {
+				if (UserUtil.isLogin()) {
+					MsgUtil.toast("添加成功")
+				} else {
+					this.$refs.loginDialog.open("center")
+					MsgUtil.toast("请先去登录！")
+				}
+			},
+			dissmisLoginDialog: function() {
+				this.$refs.loginDialog.close()
+			},
+			loginSuccess: function() {
+				this.dissmisLoginDialog()
+			},
+			closeClassifyDialog: function() {
+				this.classifyDialogShow = false
+			},
+			onClassifySelected: function(listIndex, selectedIndex, selectedData) {
+				switch (listIndex) {
+					case 1: // 综合
+						this.list1SelectedBean.selectedIndex = selectedIndex
+						this.list1SelectedBean.type = selectedData.type
+						this.list1SelectedBean.value = selectedData.value
+						break;
+					case 2: // 价格
+					this.list2SelectedBean.selectedIndex = selectedIndex
+					this.list2SelectedBean.type = selectedData.type
+					this.list2SelectedBean.value = selectedData.value
+						break;
+					case 3: // 分类
+					this.list3SelectedBean.selectedIndex = selectedIndex
+					this.list3SelectedBean.type = selectedData.type
+					this.list3SelectedBean.value = selectedData.value
+						break;
+				}
+				MsgUtil.log("listIndex ---> " + listIndex + " selectedIndex ---> " + selectedIndex)
+				MsgUtil.log("selectedData ---> " + selectedData.type + " --- " + selectedData.value)
+			},
+		},
+		onPullDownRefresh() { // 下拉刷新
+			setTimeout(() => {
+				uni.stopPullDownRefresh()
+			}, 500)
+		},
+		onLoad: function(option) {
+			var bean = this.list3SelectedBean
+			var type = parseInt(option.type.toString())
+			if (type == null || type == undefined) {
+				bean.selectedIndex = 0
+				bean.type = -1
+				bean.value = "分类"
+				return
+			}
+			this.type = type
+			var list = this.list3
+			for (var i = 0; i < list.length; i++) {
+				if (list[i].type == type) {
+					bean.selectedIndex = i
+					bean.type = list[i].type
+					bean.value = list[i].value
+					this.listIndex = 3
+					break
+				}
+			}
+			MsgUtil.log(bean.selectedIndex + " === " + bean.type + " === " +  bean.value)
+		}
+	}
+</script>
+
+<style lang="scss">
+	$searchHeight: 40px;
+	.serarch-layout {
+		position: fixed;
+		z-index: 1;
+		/* #ifdef H5 */
+		top: 44px; // NavigationBar 高度为44px
+		/* #endif */
+		
+		/* #ifndef H5 */
+		top: 0;
+		/* #endif */
+		left: 0;
+		right: 0;
+		height: $searchHeight;
+		background-color: #007AFF;
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+		
+		.search-left {
+			display: flex;
+			flex-direction: row;
+			height: 30px;
+			margin-left: 13px;
+			flex: 1;
+			justify-content: center;
+			align-items: center;
+			background-color: #FFFFFF;
+			border-radius: 20px;
+			
+			.searc-icon {
+				width: 20px;
+				height: 20px;
+				margin-left: 10px;
+			}
+			.searc-edit {
+				flex: 1;
+				margin-left: 5px;
+				font-size: 14px;
+				color: #000000;
+			}
+		}
+		.searc-txt {
+			width: 50px;
+			height: $searchHeight;
+			line-height: $searchHeight;
+			text-align: center;
+			color: #FFFFFF;
+			font-size: 14px;
+		}
+	}
+	
+	.search-layout2 {
+		position: fixed;
+		left: 0;
+		right: 0;
+		
+		/* #ifdef H5 */
+		top: 84px; // NavigationBar 高度为44px
+		/* #endif */
+		
+		/* #ifndef H5 */
+		top: $searchHeight;
+		/* #endif */
+		
+		height: $searchHeight;
+		z-index: 1;
+		background-color: #FFFFFF;
+		display: flex;
+		flex-direction: row;
+		border-bottom-color: #F2F2F2;
+		border-bottom-width: 0.5px;
+		
+		.search-pop1 {
+			flex: 1;
+			display: flex;
+			flex-direction: row;
+			justify-content: center;
+			align-items: center;
+			
+			.pop-txt {
+				font-size: 14px;
+				margin-right: 5px;
+			}
+			
+			.pop-icon {
+				width: 8px;
+				height: 8px;
+			}
+		}
+	}
+	
+	.shop-margin {
+		margin-top: 80px;
+	}
+	
+	.shop {
+		height: 120px;
+		background-color: #FFFFFF;
+		margin-bottom: 1px;
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+		padding-left: 12px;
+		padding-right: 12px;
+		.shop-image {
+			width: 120px;
+			height: 100px;
+			margin-right: 10px;
+		}
+		.layout {
+			flex: 1;
+			flex-direction: column;
+			height: 100px;
+			.title {
+				color: #000000;
+				font-size: 16px;
+			}
+			.content {
+				color: #808080;
+				font-size: 14px;
+				margin-top: 3px;
+			}
+			.auth {
+				color: #91919C;
+				font-size: 12px;
+				margin-top: 3px;
+			}
+			.bottom {
+				flex-direction: row;
+				align-items: center;
+				justify-content: space-between;
+				.bottom-text {
+					color: #007AFF;
+					font-size: 13px;
+					font-weight: bold;
+				}
+				.bottom-button {
+					background-color: #007AFF;
+					font-size: 12px;
+					color: #FFFFFF;
+					height: 25px;
+					line-height: 25px;
+					padding-left: 6px;
+					padding-right: 6px;
+					line-height: 25px;
+					border-radius: 3px;
+					border-style: none;
+				}
+			}
+		}
+	}
+	
+	.selected-txt {
+		color: #007AFF;
+	}
+	.un-selected-txt {
+		color: #91919C;
+	}
+	
+</style>

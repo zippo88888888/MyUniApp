@@ -1,0 +1,446 @@
+<template>
+	<view>
+		<uni-list :border="false" >
+			<uni-list-item direction="column" v-for="(item,index) in dataList" :key="item.id">
+				<view slot="body" class="list-body">
+					<view class="list-body-box">
+						<image class="box2" v-bind:src="item.checked ? radio_y : radio_n"
+							v-on:click="itemBoxClick(index)"></image>
+					</view>
+					<view class="list-body-c">
+						<image class="pic" src="../../static/banner/banner4.jpg" mode="aspectFill" @click="itemClick(item)"></image>
+						<view class="content">
+							<text class="title txt-max-1" @click="itemClick(item)">{{item.shopName}}</text>
+							<view class="sku-v" @click="itemClick(item)">
+								<text class="sku txt-max-1">{{item.shopSku}}</text>
+								<view style="flex: 1;"></view>
+							</view>
+							<view class="price-v">
+								<text class="price" @click="itemClick(item)">{{item.price}}猿币</text>
+								<uni-number-box @change="itemCountChange" v-model="item.count" :min="1" />
+							</view>
+						</view>
+					</view>
+				</view>
+				<view slot="footer" class="list-footer"></view>
+			</uni-list-item>
+		</uni-list>
+		<NoLoadMoreView class="list"></NoLoadMoreView>
+		<view class="bottom">
+			<view style="flex-direction: row;">
+				<image class="box2" v-bind:src="allSelected ? radio_y : radio_n" v-on:click="allBoxClick()"></image>
+				<text class="all" v-on:click="allBoxClick()">全选</text>
+			</view>
+			<view class="submit" v-if="!isEdit">
+				<text class="all-price">共计 {{allPrice}} 猿币</text>
+				<text class="submit-btn" v-on:click="submitSelectedData()">去结算</text>
+			</view>
+			<view v-if="isEdit" class="del" v-on:click="delSeletedData()">
+				<text class="del-txt">删除</text>
+			</view>
+		</view>
+		<!-- 登录弹窗 -->
+		<view>
+			<uni-popup ref="loginDialog">
+				<LoginDialog @loginSuccess="loginSuccess()" @dissmisDialog="dissmisDialog()"/>
+			</uni-popup>
+		</view>
+	</view>
+</template>
+
+<script>
+	import MsgUtil from '../../util/msg.js';
+	import UserUtil from '../../util/userUtil.js';
+	import LoginDialog from '../dialog/loginDialog.vue';
+	import NoLoadMoreView from '../../components/no_load_more.vue';
+	export default {
+		components: {LoginDialog,NoLoadMoreView},
+		data() {
+			return {
+				radio_n: "../../static/pic/radio_n.png",
+				radio_y: "../../static/pic/radio_y.png",
+				allSelected: false,
+				allPrice: 0,
+				isEdit: false,
+				isOk: false, // 页面第一次是否渲染完成
+				dataList: [],
+				dataList2: [
+					{shopName: '机械键盘-红轴-二次元', shopSku: '红轴-红色撞色', price: 1000, count: 10, checked: false},
+					{shopName: 'SAMSUNG-S21Utral', shopSku: '黑色-16G+512G', price: 9999, count: 1, checked: false},
+					{shopName: '景隆裕翠庵', shopSku: '标准套件', price: 50, count: 1, checked: false},
+					{shopName: '外星人显示器', shopSku: '白色-240Hz-带鱼屏', price: 5999, count: 1, checked: false},
+					{shopName: '这就是中国-地理 畅销书籍', shopSku: '豪华套装版', price: 99, count: 1, checked: false},
+					{shopName: '罗技电竞鼠标-G920', shopSku: 'G920', price: 899, count: 1, checked: false},
+					{shopName: 'ROG Z490、Inter 酷睿 i9-11900K', shopSku: '板U套装', price: 7999, count: 1, checked: false},
+					{shopName: '联想-拯救者-Y9000K-32G-1TB-RTX3080', shopSku: '白色-RTX3080', price: 15999, count: 1, checked: false}
+				]
+			}
+		},
+		methods: {
+			itemBoxClick: function(index) {
+				var isChecked = this.dataList[index].checked
+				this.dataList[index].checked = !isChecked
+				this.isAllBoxChecked()
+				this.getSelectedDataPrice()
+			},
+			itemCountChange: function(count) {
+				const that = this
+				setTimeout(() => {
+					that.getSelectedDataPrice()
+				}, 300)
+			},
+			itemClick: function(item) {
+				uni.navigateTo({
+					url: "../shop/shop_info?shopId=" + item.id
+				})
+			},
+			allBoxClick: function() {
+				this.allSelected = !this.allSelected
+				this.changeItemBoxState()
+				if (this.allSelected) {
+					this.getSelectedDataPrice()
+				} else {
+					this.allPrice = 0
+				}
+			},
+			submitSelectedData: function() { // 提交已选中的数据
+				var list = this.getSelectedData()
+				if (list === null || list.length <= 0) {
+					uni.showToast({
+						title: "请至少选择一个商品",
+						icon: 'none'
+					})
+				} else {
+					uni.navigateTo({
+						url: "../shop/confirm_order"
+					})
+				}
+			},
+			delSeletedData: function() { // 删除已选中的数据
+				var selectedList = this.getSelectedData()
+				var list = this.getSelectedData()
+				if (list === null || list.length <= 0) {
+					uni.showToast({
+						title: "请至少选择一个商品",
+						icon: 'none'
+					})
+					return
+				}
+				var that = this
+				uni.showModal({
+					title: "温馨提示",
+					content: "确定要删除选中的数据吗？",
+					confirmText: "删除",
+					confirmColor: "#FF5A5F",
+					success: (option) => {
+						if (option.confirm) {
+							var newList = []
+							that.dataList.forEach(item => {
+								var i = selectedList.indexOf(item)
+								if (i === -1) {
+									newList.push(item)
+								}
+							})
+							that.dataList = []
+							that.dataList = newList
+							that.allPrice = 0
+							that.allSelected = false
+							// that.isEdit = !that.isEdit
+							// that.toolbarRightClick()
+						}
+					}
+				})
+			},
+			getSelectedData: function() { // 获取已选中的数据
+				var selectedList = []
+				this.dataList.forEach(item => {
+					if (item.checked) {
+						selectedList.push(item)
+					}
+				})
+				return selectedList
+			},
+			getSelectedDataPrice: function() { // 获取已选中的数据的总价格
+				var price = 0
+				this.dataList.forEach(item => {
+					if (item.checked) {
+						price = price + item.price * item.count
+					}
+				})
+				this.allPrice = price
+			},
+			isAllBoxChecked: function() { // 检查是否已经全部选中
+				var isAllChecked = true
+				this.dataList.every((item, index) => {
+					if (!item.checked) {
+						isAllChecked = false
+						return false
+					} else {
+						return true
+					}
+				})
+				this.allSelected = isAllChecked
+			},
+			changeItemBoxState: function() {
+				var checked = this.allSelected
+				this.dataList.forEach(item => {
+					item.checked = checked
+				})
+			},
+			toolbarRightClick: function() {
+				var title = ""
+				if (this.isEdit) {
+					this.isEdit = false
+					title = "编辑 "
+				} else {
+					this.isEdit = true
+					title = "完成 "
+				}
+				this.setToolbarRightTxt(title)
+			},
+			setToolbarRightTxt: function(title) { // 设置Toolbar右侧的值
+				let pages = getCurrentPages()
+				let page = pages[pages.length - 1]
+				// #ifdef APP-PLUS
+				let currentWebview = page.$getAppWebview()
+				let titleNView = currentWebview.getStyle().titleNView
+				// 添加文字过长截取为3个字符，请根据自己业务需求更改
+				titleNView.buttons[0].text = title
+				currentWebview.setStyle({
+					titleNView: titleNView
+				})
+				// #endif
+				// #ifdef H5
+				// h5 临时方案
+				document.getElementsByClassName('uni-btn-icon')[1].innerText = title
+				// #endif
+			},
+			onRefresh: function() {
+				this.isEdit = false
+				this.setToolbarRightTxt("编辑 ")
+				this.allPrice = 0
+				this.allSelected = false
+				this.dataList.forEach(item => {
+					item.checked = false
+				})
+			},
+			getTestData: function() {
+				this.dataList = this.dataList2
+			},
+			loginSuccess: function() {
+				MsgUtil.toast("模拟登录成功！")
+				this.$refs.loginDialog.close()
+				this.getTestData()
+			},
+			dissmisDialog: function () {
+				this.$refs.loginDialog.close()
+			},
+			autoData: function() {
+				if (UserUtil.isLogin()) {
+					this.getTestData()
+					this.$refs.loginDialog.close()
+				} else {
+					MsgUtil.toast("请先去登录！")
+					this.$refs.loginDialog.open("center")
+					this.dataList = []
+				}
+			}
+		},
+		onPullDownRefresh() { // 下拉刷新
+			if (!UserUtil.isLogin()) {
+				MsgUtil.toast("请先去登录！")
+				this.$refs.loginDialog.open("center")
+				this.dataList = []
+				uni.stopPullDownRefresh()
+				return
+			}
+			var that = this
+			setTimeout(() => {
+				uni.stopPullDownRefresh()
+				that.onRefresh()
+			}, 500)
+		},
+		onNavigationBarButtonTap() { // 右侧编辑点击
+			this.toolbarRightClick()
+		},
+		onShow: function(option) {
+			if (this.isOk) {
+				this.autoData()
+			} else {
+				MsgUtil.log("页面未渲染完成，不自动弹出登录Dialog")
+			}
+		},
+		onReady: function(option) {
+			if (!this.isOk) {
+				this.autoData()
+				MsgUtil.log("页面第一次渲染完成，弹出登录Dialog，之后交给onShow")
+			}
+			this.isOk = true
+		}
+	}
+</script>
+
+<style lang="scss">
+	$c_height: 110px; // list item height
+	$c_b_height: 50px; // bottomHeight
+
+	.list {
+		margin-bottom: $c_b_height;
+	}
+
+	.list-header {
+		// 模拟实现 其他效果
+		height: 0;
+		display: flex;
+	}
+
+	.list-footer {
+		// 模拟实现 13px的分割线
+		// height: 10px;
+		height: 1px;
+		display: flex;
+		background-color: $uni-bg-color;
+	}
+
+	.list-body {
+		display: flex;
+		flex: 1;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+		height: $c_height;
+	}
+
+	.list-body-box {
+		display: flex;
+		width: 30px;
+		height: $c_height;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.box2 {
+		width: 16px;
+		height: 16px;
+	}
+
+	.list-body-c {
+		display: flex;
+		flex: 1;
+		justify-content: center;
+		align-items: center;
+		flex-direction: row;
+		height: $c_height;
+
+		.pic {
+			width: 110px;
+			height: 85px;
+		}
+
+		.content {
+			display: flex;
+			flex: 1;
+			height: 85px;
+			margin-left: 10px;
+			margin-right: 10px;
+
+			.title {
+				color: black;
+				font-size: 15px;
+			}
+
+			.sku-v {
+				flex-direction: row;
+
+				.sku {
+					color: #91919C;
+					background-color: $uni-bg-color;
+					// width: var(--status-bar-height);
+					font-size: 13px;
+					padding-left: 5px;
+					padding-right: 5px;
+					margin-top: 5px;
+				}
+			}
+
+			.price-v {
+				flex: 1;
+				flex-direction: row;
+				align-items: flex-end;
+				justify-content: space-between;
+
+				.price {
+					color: #007AFF;
+					font-weight: bold;
+					font-size: 13px;
+				}
+			}
+		}
+	}
+
+	.bottom {
+		position: fixed;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		height: $c_b_height;
+		background-color: #FFFFFF;
+		border-top-color: $uni-bg-color;
+		border-top-width: 1px;
+		left: 0;
+		right: 0;
+		padding-left: 7px;
+
+		/* #ifdef H5 */
+		bottom: var(--window-bottom);
+		/* #endif */
+
+		/* #ifdef APP-NVUE || APP-PLUS */
+		bottom: 0;
+		/* #endif */
+
+		.all {
+			margin-left: 6px;
+			font-size: 13px;
+		}
+
+		.submit {
+			flex-direction: row;
+			flex: 1;
+			align-items: center;
+			justify-content: space-between;
+
+			.all-price {
+				color: #007AFF;
+				font-weight: bold;
+				font-size: 14px;
+				margin-left: 20px;
+			}
+
+			.submit-btn {
+				width: 90px;
+				height: $c_b_height;
+				line-height: $c_b_height;
+				background-color: #007AFF;
+				text-align: center;
+				color: #FFFFFF;
+				font-size: 14px;
+			}
+		}
+
+		.del {
+			width: 90px;
+			height: $c_b_height;
+			line-height: $c_b_height;
+			background-color: #DD524D;
+			justify-content: center;
+			align-items: center;
+
+			.del-txt {
+				color: #FFFFFF;
+				font-size: 14px;
+			}
+		}
+	}
+</style>

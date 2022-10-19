@@ -1,0 +1,248 @@
+<template>
+	<view>
+		<uni-list :border="false">
+			<uni-list-item direction="column" class="list-item" v-for="(item,index) in list" :key="index">
+				<view slot="header" class="list-header" @click="toInfoPage()">
+					<image class="icon" src="../../static/pic/my_header.jpg"></image>
+					<view class="layout">
+						<text class="name txt-max-1">用户名</text>
+						<text class="time">2021-07-01 20:39</text>
+					</view>
+				</view>
+				<view slot="body" v-if="item > 0">
+					<!-- 使用 ImagePic9 的方式显示九宫格 每次都会计算宽度 会有性能上的影响  -->
+					<ImagePic9 :needShowAddPic="false" :needShowDelPic="false" :picData="testPicList"></ImagePic9>
+				</view>
+				<!-- 此方式 不会 有性能上的影响 只计算一次 -->
+				<!-- <view slot="body" class="list-body" v-if="item > 0">
+					<uni-grid :column="3" :highlight="false" :showBorder="false" @change="picItemClick">
+						<uni-grid-item v-for="(childItem, childIndex) in item" :index="childIndex" :key="childIndex">
+							<view class="grid-item-box">
+								<image :style="'width:' + itemNeedWH + 'px;' + 'height:' + itemNeedWH + 'px'"
+									class="box-image" src="../../static/pic/my_header.jpg" mode="aspectFill"></image>
+							</view>
+						</uni-grid-item>
+					</uni-grid>
+				</view> -->
+				<view slot="footer" class="list-footer" @click="toInfoPage()">
+					<text class="content txt-max-2">支持小红书多图剪裁微信多图选择单图剪裁多图批量剪裁大图预览支持自定义所有UI包括标题栏底部栏列表item文件夹item剪裁页面预览页面等支持13种视频图片格式混合加载支持过滤掉指定格式文件</text>
+					<view class="layout-b">
+						<image class="s-image" src="../../static/pic/dz.png"></image>
+						<text class="s-text">111</text>
+						<view class="space"></view>
+						<image class="s-image" src="../../static/pic/pl.png"></image>
+						<text class="s-text">111</text>
+					</view>
+				</view>
+			</uni-list-item>
+		</uni-list>
+		<uni-load-more :status="loadMoreState" color="#91919C" :icon-size="12" :content-text="contextText" />
+		<view class="add" v-on:click="add()">
+			<image class="add-image" src="../../static/pic/add2.png"></image>
+		</view>
+	</view>
+</template>
+
+<script>
+	import MsgUtil from '../../util/msg.js';
+	import ImagePic9 from '../../components/ImagePic9.vue';
+	export default {
+		components: {
+			ImagePic9,
+		},
+		data() {
+			return {
+				loadMoreState: 'more',
+				loadMoreColor: '#91919C',
+				contextText: {
+					contentdown: '上拉加载更多',
+					contentrefresh: '拼了命的加载中...',
+					contentnomore: '别滑了，到底了@_@'
+				},
+				indicatorColor: 'white',
+				indicatorActiveColor: '#007AFF',
+				itemNeedWH: 0,
+				list: [0, 1, 3, 4, 5, 6, 7, 8, 9],
+				testPicList: [
+					{ picUrl: "../../static/pic/my_header.jpg", },
+					{ picUrl: "../../static/pic/my_header.jpg", },
+					{ picUrl: "../../static/pic/my_header.jpg", },
+					{ picUrl: "../../static/pic/my_header.jpg", },
+					{ picUrl: "../../static/pic/my_header.jpg", },
+					{ picUrl: "../../static/pic/my_header.jpg", }
+				]
+			}
+		},
+		methods: {
+			loadMore: function() {
+
+			},
+			toInfoPage: function(item) {
+				uni.navigateTo({
+					url: "../space/space_info",
+				})
+			},
+			picItemClick: function() {
+				MsgUtil.toast("imageClick")
+			},
+			add: function() {
+				uni.navigateTo({
+					url: "../space/add_space"
+				})
+			},
+			// callItemWidth: function(screenWidth) { // 动态计算 宫格图片的宽和高
+			// 	// 13 为 $l-r；10为 $l-r-real-need；3 为 margin-right；一行显示3 个
+			// 	var needWH = (screenWidth - 13 - 10 - 3 * 3) / 3
+			// 	MsgUtil.log("screenWidth --- " + screenWidth + " needWH --- " + needWH)
+			// 	this.itemNeedWH = needWH
+			// }
+		},
+		onPullDownRefresh() { // 下拉刷新
+			var that = this
+			setTimeout(() => {
+				uni.stopPullDownRefresh()
+				that.loadMoreState = 'more'
+			}, 500)
+		},
+		onReachBottom() { // 加载更多
+			var that = this
+			that.loadMoreState = 'loading'
+			setTimeout(() => {
+				that.loadMoreState = 'noMore'
+			}, 1500)
+		},
+		// onReady: function() {
+		// 	var that = this
+		// 	uni.getSystemInfo({
+		// 		success: (systemInfo) => {
+		// 			that.callItemWidth(systemInfo.screenWidth)
+		// 		}
+		// 	})
+		// }
+	}
+</script>
+
+<style lang="scss">
+	$l-r: 13px;
+	$l-r-real-need: 10px;
+
+	.list-item {
+		background-color: #FFFFFF;
+		margin-top: 1px;
+	}
+
+	.list-header {
+		flex-direction: row;
+		display: flex;
+		height: 55px;
+		margin-top: 10px;
+		align-items: center;
+		padding-left: $l-r;
+		padding-right: $l-r;
+
+		.icon {
+			width: 42px;
+			height: 42px;
+			border-radius: 21px;
+		}
+
+		.layout {
+			flex: 1;
+			margin-left: 15px;
+
+			.name {
+				color: #000000;
+				font-size: 15px;
+				font-weight: bold;
+				margin-bottom: 3px;
+			}
+
+			.time {
+				color: #91919C;
+				font-size: 13px;
+			}
+		}
+	}
+
+	// .list-body {
+	// 	padding-left: $l-r;
+	// 	padding-right: $l-r-real-need;
+
+	// 	.grid-item-box {
+	// 		flex: 1;
+	// 		flex-direction: column;
+	// 		display: flex;
+	// 		align-items: center;
+	// 		justify-content: center;
+	// 		margin-top: 3px;
+	// 		margin-right: 3px;
+
+	// 		.box-image {
+	// 			border-radius: 5px;
+	// 		}
+	// 	}
+	// }
+
+	.list-footer {
+		padding-left: $l-r;
+		padding-right: $l-r;
+		padding-bottom: 10px;
+		margin-top: 7px;
+
+		.content {
+			color: #000000;
+			font-size: 14px;
+		}
+
+		.layout-b {
+			margin-top: 5px;
+			flex-direction: row;
+			height: 30px;
+			justify-content: flex-end;
+			align-items: center;
+
+			.s-image {
+				width: 15px;
+				height: 15px;
+				margin-right: 5px;
+			}
+
+			.space {
+				width: 10px;
+			}
+
+			.s-text {
+				color: #91919C;
+				font-size: 13px;
+			}
+		}
+	}
+
+	.add {
+		position: fixed;
+		right: 15px;
+		background-color: #007AFF;
+		border-radius: 20px;
+		box-shadow: 0px 2px 18px 0px rgba(0, 122, 255, 0.3);
+		
+		/* #ifdef H5 */
+		bottom: calc(var(--window-bottom) + 20px);
+		/* #endif */
+
+		/* #ifdef APP || APP-NVUE || APP-PLUS */
+		bottom: 20px;
+		/* #endif */
+
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+		width: 40px;
+		height: 40px;
+
+		.add-image {
+			width: 30px;
+			height: 30px;
+		}
+	}
+</style>

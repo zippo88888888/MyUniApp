@@ -1,0 +1,206 @@
+/* 带回复的评论列表样式 */
+.comment-item {
+	display: flex;
+	flex-direction: column;
+}
+
+.comment-item-u {
+	display: flex;
+	flex-direction: row;
+	height: 60px;
+	align-items: center;
+}
+
+.comment-item-pic {
+	width: 40px;
+	height: 40px;
+	border-radius: 20px;
+}
+
+.comment-item-r {
+	display: flex;
+	flex-direction: column;
+	margin-left: 10px;
+	flex: 1;
+	justify-content: center;
+}
+
+.comment-item-name {
+	font-size: 14px;
+	color: #000000;
+}
+
+.comment-item-time {
+	font-size: 13px;
+	color: #91919C;
+	margin-top: 3px;
+}
+
+.comment-item-zan {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	margin-right: 10px;
+	width: 50px;
+}
+
+.comment-item-zan-pic {
+	width: 13px;
+	height: 13px;
+}
+
+.comment-item-zan-count {
+	color: #91919C;
+	font-size: 12px;
+	margin-left: 3px;
+}
+
+.comment-item-content {
+	display: flex;
+	flex-direction: column;
+	margin-left: 63px;
+	border-bottom-color: #F2F2F2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	padding-bottom: 10px;
+}
+
+.comment-item-content-n {
+	display: flex;
+	flex-direction: column;
+	margin-left: 63px;
+	padding-bottom: 10px;
+}
+
+.comment-item-txt {}
+
+.comment-item-child {
+	padding-left: 7px;
+	padding-right: 7px;
+	padding-bottom: 5px;
+	margin-top: 7px;
+	display: flex;
+	flex-wrap: wrap;
+	flex-direction: column;
+	background-color: #EEEEEE;
+	border-radius: 5px;
+}
+
+.cic-name {
+	color: #007AFF;
+	font-size: 13px;
+	margin-top: 5px;
+}
+
+.cic-content {
+	color: #000000;
+	font-size: 13px;
+}
+
+.cic-all {
+	color: #007AFF;
+	font-size: 13px;
+	margin-top: 5px;
+}
+
+/* 下面之前在 space_info 里面的样式 */
+/* .comment-item {
+		display: flex;
+		flex-direction: column;
+		
+		.comment-item-u {
+			display: flex;
+			flex-direction: row;
+			height: 60px;
+			align-items: center;
+			
+			.comment-item-pic {
+				width: 40px;
+				height: 40px;
+				border-radius: 20px;
+			}
+			
+			.comment-item-r {
+				display: flex;
+				flex-direction: column;
+				margin-left: 10px;
+				flex: 1;
+				justify-content: center;
+				
+				.comment-item-name {
+					font-size: 14px;
+					color: #000000;
+				}
+				
+				.comment-item-time {
+					font-size: 13px;
+					color: #91919C;
+					margin-top: 3px;
+				}
+			}
+			
+			.comment-item-zan {
+				display: flex;
+				flex-direction: row;
+				justify-content: center;
+				align-items: center;
+				margin-right: 10px;
+				width: 50px;
+				
+				.comment-item-zan-pic {
+					width: 13px;
+					height: 13px;
+				}
+				
+				.comment-item-zan-count {
+					color: #91919C;
+					font-size: 12px;
+					margin-left: 3px;
+				}
+			}
+			
+		}
+		
+		.comment-item-content {
+			display: flex;
+			flex-direction: column;
+			margin-left: 63px;
+			border-bottom-color: #F2F2F2;
+			border-bottom-width: 1px;
+			border-bottom-style: solid;
+			padding-bottom: 10px;
+			
+			.comment-item-txt {
+			}
+			
+			.comment-item-child {
+				padding-left: 7px;
+				padding-right: 7px;
+				padding-bottom: 5px;
+				margin-top: 7px;
+				display: flex;
+				flex-wrap: wrap;
+				flex-direction: column;
+				background-color: #EEEEEE;
+				border-radius: 5px;
+				
+				.cic-name {
+					color: #007AFF;
+					font-size: 13px;
+					margin-top: 5px;
+				}
+				.cic-content {
+					color: #000000;
+					font-size: 13px;
+				}
+				
+				.cic-all {
+					color: #007AFF;
+					font-size: 13px;
+					margin-top: 5px;
+				}
+			}
+			
+		}
+	} */

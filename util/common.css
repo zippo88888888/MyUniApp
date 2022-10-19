@@ -1,0 +1,109 @@
+page {
+	background: #F2F2F2;
+}
+
+/* .row {
+	display: flex;
+	flex-direction: row;
+}
+
+.column {
+	display: flex;
+	flex-direction: column;
+} 
+
+.ct {
+	justify-content: center;
+	align-items: center;
+} */
+
+.flex {
+	flex: 1;
+}
+
+.m-l {
+	margin-left: 13px;
+}
+
+.m-r {
+	margin-right: 13px;
+}
+
+.m-t {
+	margin-top: 13px;
+}
+
+.m-b {
+	margin-bottom: 13px;
+}
+
+.uni-absolute {
+	position: absolute;
+	left: 0; 
+	top: 0; 
+	right: 0; 
+	bottom: 0;
+}
+
+/* 文本最多一行显示 */
+.txt-max-1 {
+	overflow: hidden;
+	word-break: break-all;  /* break-all(允许在单词内换行。) */
+	text-overflow: ellipsis;  /* 超出部分省略号 */
+	display: -webkit-box; /* 对象作为伸缩盒子模型显示 **/
+	-webkit-box-orient: vertical; /* 设置或检索伸缩盒对象的子元素的排列方式 **/
+	-webkit-line-clamp: 1; /* 显示的行数 **/
+	
+	/* #ifdef APP-NVUE || APP-PLUS */
+	lines: 1; /* NVUE下要用这个属性，来让文字超出隐藏变省略号 */
+	/* #endif */
+}
+
+/* 文本最多两行显示 */
+.txt-max-2 {
+	overflow: hidden;
+	word-break: break-all;  /* break-all(允许在单词内换行。) */
+	text-overflow: ellipsis;  /* 超出部分省略号 */
+	display: -webkit-box; /* 对象作为伸缩盒子模型显示 **/
+	-webkit-box-orient: vertical; /* 设置或检索伸缩盒对象的子元素的排列方式 **/
+	-webkit-line-clamp: 2; /* 显示的行数 **/
+	
+	/* #ifdef APP-NVUE || APP-PLUS */
+	lines: 2; /* NVUE下要用这个属性，来让文字超出隐藏变省略号 */
+	/* #endif */
+}
+
+/* 默认文字样式 */
+.txt {
+	color: #000000;
+	font-size: 14px;
+}
+
+/* 分割线 */
+.line {
+	width: 100%;
+	height: 1px;
+	background-color: #F2F2F2;
+}
+
+/* 默认圆角背景 */
+.bg {
+	background-color: #FFFFFF;
+	border-radius: 5px;
+	/* #ifdef H5  */
+	border-style: none;
+	/* #endif */
+}
+
+/* 背景阴影 */
+.bg-mask { 
+	z-index: 999;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+}
+
+

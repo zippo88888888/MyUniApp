@@ -1,0 +1,230 @@
+<template>
+	<view>
+		<view class="top-layout">
+			<!-- #ifdef APP-NVUE || APP-PLUS -->
+			<image class="top-layout-bg" mode="scaleToFill" src="../../static/pic/my_header.jpg"></image>
+			<!-- #endif -->
+			<image class="user-icon" src="../../static/pic/my_header.jpg"></image>
+			<text class="txt">嗨，欢迎来到猿家店</text>
+			<view v-if="!isLogin" class="layout">
+				<text class="btn" v-on:click="login()">登录</text>
+				<text class="btn btn2" v-on:click="register()">注册</text>
+			</view>
+			<view v-if="isLogin" class="layout">
+				<text class="btn">门店消息</text>
+				<text class="btn btn2">邀请码</text>
+			</view>
+		</view>
+		<view class="list-item" v-for="(item,index) in list" :key="item.path" v-on:click="itemClick(item)">
+			<image class="logo" v-bind:src="item.icon"></image>
+			<text class="title">{{item.title}}</text>
+			<image class="jt" src="../../static/pic/right_jt.png"></image>
+		</view>
+		
+		<!-- 登录弹窗 -->
+		<view>
+			<uni-popup ref="popup">
+				<LoginDialog @loginSuccess="loginSuccess()" @dissmisDialog="dissmisDialog()"/>
+			</uni-popup>
+		</view>
+		
+		<!-- 客服弹窗  -->
+		<view>
+			<uni-popup ref="tel">
+				<TelDialog @dissmisTelDialog="dissmisTelDialog()"/>
+			</uni-popup>
+		</view>
+	</view>
+	
+</template>
+
+<script>
+	import UserUtil from '../../util/userUtil.js';
+	import MsgUtil from '../../util/msg.js';
+	import LoginDialog from '../dialog/loginDialog.vue';
+	import TelDialog from '../dialog/telDialog.vue'
+	export default {
+		components: {LoginDialog, TelDialog},
+		data() {
+			return {
+				isLogin: false,
+				list: [
+					{icon:"../../static/pic/order.png", title:"我的订单", path:"../my/order"},
+					{icon:"../../static/pic/yhq.png", title:"优惠券", path:"../my/ticker"},
+					{icon:"../../static/pic/address.png", title:"地址管理", path:"../my/address"},
+					// #ifdef APP || APP-PLUS || APP-NVUE
+					{icon:"../../static/pic/about.png", title:"关于", path:"about"},
+					// #endif
+					{icon:"../../static/pic/set.png", title:"设置", path:"set"},
+					{icon:"../../static/pic/service.png", title:"客服", path:"tel"},
+				]
+			}
+		},
+		methods: {
+			login: function() {
+				this.openLoginDialog()
+			},
+			loginSuccess: function() {
+				MsgUtil.toast("模拟登录成功！")
+				this.isLogin = UserUtil.isLogin()
+				this.dismissLoginDialog()
+			},
+			dissmisDialog: function () {
+				this.dismissLoginDialog()
+			},
+			register: function() {
+				uni.navigateTo({
+					url: "../my/register"
+				})
+			},
+			dissmisTelDialog: function () {
+				this.$refs.tel.close()
+			},
+			itemClick: function(item) {
+				switch(item.path) {
+					case "tel":
+						this.$refs.tel.open("bottom")
+						break
+					case "about":
+						break
+					case "set":
+						if (UserUtil.isLogin()) {
+							this.jumpSet()
+						} else {
+							MsgUtil.toast("未登录，请先去登录！")
+							this.openLoginDialog()
+						}
+						break
+					default: {
+						if (UserUtil.isLogin()) {
+							MsgUtil.log("navigateTo ---> " + item.path)
+							uni.navigateTo({
+								url: item.path
+							})
+						} else {
+							MsgUtil.toast("未登录，请先去登录！")
+							this.openLoginDialog()
+						}
+						break
+					}
+				}
+			},
+			jumpSet: function() {
+				var that = this
+				uni.navigateTo({
+					url: "../my/set",
+					events: {
+						exitLogin: function(isLogout) {
+							that.isLogin = isLogout
+						}
+					}
+				})
+			},
+			openLoginDialog: function() {
+				this.$refs.popup.open("center")
+			},
+			dismissLoginDialog: function() {
+				this.$refs.popup.close()
+			}
+		},
+		onPullDownRefresh() { // 下拉刷新
+			setTimeout(() => {
+				uni.stopPullDownRefresh()
+			}, 500)
+		},
+		onShow: function(option) {
+			this.isLogin = UserUtil.isLogin()
+		}
+	}
+</script>
+
+<style lang="scss">
+	
+	.top-layout {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		height: 220px;
+		/* #ifdef H5 */
+		background-image: url(../../static/pic/my_header.jpg);
+		background-size: cover;
+		/* #endif */
+		
+		.top-layout-bg {
+			position: absolute;
+			left: 0; 
+			top: 0; 
+			right: 0; 
+			bottom: 0;
+		}
+		
+		.user-icon {
+			width: 70px;
+			height: 70px;
+			border-width: 2px;
+			border-color: #FFFFFF;
+			border-style: solid;
+			border-radius: 35px;
+			box-shadow: 0 0 30px 3px #91919C
+		}
+		
+		.txt {
+			margin-top: 10px;
+			color: #FFFFFF;
+			font-size: 14px;
+		}
+		
+		.layout {
+			flex-direction: row;
+			margin-top: 10px;
+			
+			.btn {
+				color: #FFFFFF;
+				padding-left: 15px;
+				padding-right: 15px;
+				background-color: #007AFF;
+				border-radius: 5px;
+				border-style: none;
+				height: 30px;
+				font-size: 12px;
+				line-height: 30px;
+			}
+			
+			.btn2 {
+				background-color: #2C405A;
+				margin-left: 20px;
+			}
+		}
+	}
+	
+	.list-item {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+		height: 45px;
+		background-color: #FFFFFF;
+		border-bottom-width: 0.5px;
+		border-bottom-color: $uni-bg-color;
+		padding-left: 15px;
+		padding-right: 15px;
+		
+		.logo {
+			width: 25px;
+			height: 25px;
+			margin-right: 15px;
+		}
+		
+		.title {
+			flex: 1;
+			color: #000000;
+			font-size: 14px;
+		}
+		
+		.jt {
+			width: 10px;
+			height: 14px;
+		}
+	}
+</style>

@@ -1,0 +1,392 @@
+<template>
+	<view class="order">
+		<view class="tab-layout">
+			<text class="tab-item" v-bind:class="tabIndex == 0 ? 'tab-item-selected' : ''" v-on:click="tabItemClick(0)">全部订单</text>
+			<text class="tab-item" v-bind:class="tabIndex == 1 ? 'tab-item-selected' : ''" v-on:click="tabItemClick(1)">待付款</text>
+			<text class="tab-item" v-bind:class="tabIndex == 2 ? 'tab-item-selected' : ''" v-on:click="tabItemClick(2)">待收货</text>
+			<text class="tab-item" v-bind:class="tabIndex == 3 ? 'tab-item-selected' : ''" v-on:click="tabItemClick(3)">待评价</text>
+			<text class="tab-item" v-bind:class="tabIndex == 4 ? 'tab-item-selected' : ''" v-on:click="tabItemClick(4)">已完成</text>
+			<!--  循环出来在手机上就是不居中, 一个一个单独写就是会居中???  -->
+			<!-- <text class="tab-item" v-for="(item,index) in tabList" :key="item.id"
+				 v-bind:class="index == tabIndex ? 'tab-item-selected' : ' '" v-on:click="tabItemClick(index)">
+				{{item.name}}
+			</text> -->
+		</view>
+		<!-- #ifndef H5 -->
+		<swiper class="swiper" ref="swiper" :current="tabIndex" :duration="300" @change="swiperChange" >
+		  <swiper-item class="swiper-item" v-for="(tabItem, tabIndex) in tabList" :key="tabIndex">
+		    <view class="swiper-item-layout">
+					<uni-list class="list" :border="false">
+						<uni-list-item direction="column" class="list-item" v-for="(item,index) in orderList" :key="index">
+							<view slot="header" class="list-header" v-on:click="itemClick(item)" >
+								<text class="lab m-l">订单号：10002903</text>
+								<text class="orderState m-r">待收货</text>
+							</view>
+							<view slot="body" class="list-body" v-on:click="itemClick(item)">
+								<view class="list-item-shop" v-for="(childItem,childIndex) in (index + 1)">
+									<image class="shop-pic m-l" src="../../static/pic/my_header.jpg"></image>
+									<view class="shop-right m-r">
+										<text class="lab txt-max-1">我是商品标题</text>
+										<view class="sku-layout">
+											<text class="sku txt-max-1">我是sku</text>
+											<view style="flex: 1;"></view>
+										</view>
+										<view style="flex: 1;"></view>
+										<view class="price-layout">
+											<text class="price">900猿币</text>
+											<text class="lab">×1</text>
+										</view>
+									</view>
+								</view>
+							</view>
+							<view slot="footer" class="list-footer" v-on:click="itemClick(item)">
+								<view class="xiaoji m-r" >
+									<text class="lab">总数量：</text>
+									<text class="lab m-r">×{{index + 1}}</text>
+									<text class="lab">总计：</text>
+									<text class="price">1000猿币</text>
+								</view>
+								<view class="btn-layout m-r">
+									<text class="btn1" @touchmove.stop.prevent="downShouhuo(item)">确认收货</text>
+									<text class="btn1 btn2 m-l" @touchmove.stop.prevent="cancelOrder(item)">取消订单</text>
+								</view>
+							</view>
+						</uni-list-item>
+					</uni-list>
+				</view>
+		  </swiper-item>
+		</swiper>
+		<!-- #endif -->
+		<!-- #ifdef H5 -->
+		<uni-list class="list" :border="false">
+			<uni-list-item direction="column" class="list-item" v-for="(item,index) in orderList" :key="index">
+				<view slot="header" class="list-header" v-on:click="itemClick(item)">
+					<text class="lab m-l">订单号：10002903</text>
+					<text class="orderState m-r">待收货</text>
+				</view>
+				<view slot="body" class="list-body" v-on:click="itemClick(item)">
+					<view class="list-item-shop" v-for="(childItem,childIndex) in (index + 1)">
+						<image class="shop-pic m-l" src="../../static/pic/my_header.jpg"></image>
+						<view class="shop-right m-r">
+							<text class="lab txt-max-1">我是商品标题</text>
+							<view class="sku-layout">
+								<text class="sku txt-max-1">我是sku</text>
+								<view style="flex: 1;"></view>
+							</view>
+							<view style="flex: 1;"></view>
+							<view class="price-layout">
+								<text class="lab">900猿币</text>
+								<text class="lab">×1</text>
+							</view>
+						</view>
+					</view>
+				</view>
+				<view slot="footer" class="list-footer" v-on:click="itemClick(item)">
+					<view class="xiaoji m-r">
+						<text class="lab">总数量：</text>
+						<text class="lab m-r">×{{index + 1}}</text>
+						<text class="lab">总计：</text>
+						<text class="price">1000猿币</text>
+					</view>
+					<view class="btn-layout m-r">
+						<text class="btn1" @click.stop.prevent="downShouhuo(item)">确认收货</text>
+						<text class="btn1 btn2 m-l" v-on:click.stop.prevent="cancelOrder(item)">取消订单</text>
+					</view>
+				</view>
+			</uni-list-item>
+		</uni-list>
+		<!-- #endif -->
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				tabIndex: 0,
+				tabList: [{
+						id: "tab0",
+						name: "全部",
+						orderId: 0
+					},
+					{
+						id: "tab1",
+						name: "待付款",
+						orderId: 1
+					},
+					{
+						id: "tab2",
+						name: "待收货",
+						orderId: 2
+					},
+					{
+						id: "tab3",
+						name: "待评价",
+						orderId: 3
+					},
+					{
+						id: "tab4",
+						name: "已完成",
+						orderId: 4
+					},
+				],
+				orderList: [
+					{ name : "abc" },
+					{ name : "abc" },
+					{ name : "abc" },
+					{ name : "abc" },
+					{ name : "abc" },
+					{ name : "abc" },
+					{ name : "abc" },
+					{ name : "abc" },
+					{ name : "abc" }
+				]
+			}
+		},
+		methods: {
+			itemClick: function(item) {
+				uni.navigateTo({
+					url: "./order_info"
+				})
+			},
+			downShouhuo: function(item) {
+				uni.showToast({
+					icon:'none',
+					title: "确认收货"
+				})
+			},
+			cancelOrder: function(item) {
+				uni.showToast({
+					icon:'none',
+					title: "取消订单"
+				})
+			},
+			tabItemClick: function(index) {
+				this.tabIndex = index
+				// #ifdef H5
+				uni.showToast({
+					icon:'none',
+					title: "H5直接请数据"
+				})
+				// #endif
+			},
+			swiperChange: function(siwper) {
+				console.log("swiperChange")
+				// #ifdef APP-PLUS || H5 || MP-WEIXIN || MP-QQ
+				var index = siwper.detail.current || siwper.target.current
+				if(index === undefined) {
+					index = 0
+				}
+				console.log("swiperChange index ---> " + index)
+				this.tabIndex = index
+				// #endif
+			}
+		},
+		onPullDownRefresh() { // 下拉刷新
+			var that = this
+			setTimeout(() => {
+				uni.stopPullDownRefresh()
+			}, 500)
+		}
+	}
+</script>
+
+<style lang="scss">
+	$tabHeight: 40px;
+	$shopItemHeight: 90px;
+	
+	.order {
+		flex: 1;
+		flex-direction: column;
+		overflow: hidden;
+		
+		/* #ifdef MP-ALIPAY || MP-BAIDU */
+		height: 100vh;
+		/* #endif */
+	}
+
+	.tab-item-selected {
+		color: #007AFF;
+		border-bottom-color: #007AFF;
+		border-bottom-width: 0.5px;
+	}
+
+	.tab-layout {
+		position: fixed;
+		z-index: 10;
+		left: 0;
+		right: 0;
+		
+		/* #ifdef H5 */
+		top: var(--NavigationBar);
+		/* #endif */
+		
+		/* #ifdef APP-PLUS || APP-NVUE */
+		top: 0;
+		/* #endif */
+		
+		height: $tabHeight;
+		background-color: #FFFFFF;
+		display: flex;
+		flex-direction: row;
+		border-bottom-color: #F2F2F2;
+		border-bottom-width: 0.5px;
+
+		.tab-item {
+			flex: 1;
+			font-size: 14px;
+			height: $tabHeight;
+			
+			/* #ifdef H5 */
+			text-align: center;
+			line-height: $tabHeight;
+			/* #endif */
+			
+			text-align: center;
+			line-height: $tabHeight;
+		}
+	}
+
+	.lab {
+		font-size: 14px;
+		color: #000000;
+	}
+
+	.price {
+		color: #007AFF;
+		font-size: 14px;
+		font-weight: bold;
+	}
+	
+	.swiper {
+		margin-top: $tabHeight;
+		flex: 1;
+		display: flex;
+		.swiper-item {
+			flex: 1;
+			flex-direction: column;
+			.swiper-item-layout {
+				flex: 1;
+				flex-direction: column;
+				position: absolute;
+				left: 0;
+				top: 0;
+				right: 0;
+				bottom: 0;
+			}
+		}
+	}
+
+	.list {
+		/* #ifdef H5 */
+		margin-top: $tabHeight;
+		/* #endif */
+		.list-item {
+			margin-bottom: 10px;
+
+			.list-header {
+				display: flex;
+				flex-direction: row;
+				justify-content: space-between;
+				align-items: center;
+				height: 40px;
+				border-bottom-color: #F2F2F2;
+				border-bottom-width: 0.5px;
+
+				.orderState {
+					color: #C41339;
+					font-size: 14px;
+				}
+			}
+
+			.list-body {
+				background-color: #FFFFFF;
+				display: flex;
+				flex-direction: column;
+
+				.list-item-shop {
+					display: flex;
+					flex-direction: row;
+					height: $shopItemHeight;
+					align-items: center;
+
+					.shop-pic {
+						width: 100px;
+						height: 75px;
+					}
+
+					.shop-right {
+						display: flex;
+						flex-direction: column;
+						margin-left: 10px;
+						height: 75px;
+						flex: 1;
+
+						.sku-layout {
+							display: flex;
+							flex-direction: row;
+							margin-top: 3px;
+
+							.sku {
+								background-color: #F2F2F2;
+								padding-left: 5px;
+								padding-right: 5px;
+								padding-top: 2px;
+								padding-bottom: 2px;
+								color: #91919C;
+								font-size: 14px;
+							}
+						}
+
+						.price-layout {
+							display: flex;
+							flex-direction: row;
+							justify-content: space-between;
+						}
+					}
+				}
+			}
+
+			.list-footer {
+				flex-direction: column;
+
+				.xiaoji {
+					display: flex;
+					flex-direction: row;
+					justify-content: flex-end;
+					align-items: center;
+					height: 40px;
+					border-top-color: #F2F2F2;
+					border-top-width: 0.5px;
+					border-bottom-color: #F2F2F2;
+					border-bottom-width: 0.5px;
+				}
+
+				.btn-layout {
+					display: flex;
+					flex-direction: row;
+					justify-content: flex-end;
+					align-items: center;
+					height: 50px;
+
+					.btn1 {
+						font-size: 12px;
+						padding: 6px 7px;
+						background-color: #007AFF;
+						color: #FFFFFF;
+						border-radius: 3px;
+					}
+
+					.btn2 {
+						background-color: #FFFFFF;
+						color: #91919C;
+						border-width: 0.5px;
+						border-color: #91919C;
+					}
+				}
+			}
+
+		}
+
+	}
+</style>

@@ -1,0 +1,226 @@
+<template>
+	<view>
+		<uni-list :border="false" class="list">
+			<uni-list-item direction="column" v-for="(item,index) in list" :key="item.id">
+				<view slot="body" class="list-body column" v-on:click="itemClick(item)">
+					<view class="layout-1 m-t">
+						<text class="layout-txt m-l m-r">{{item.name}}</text>
+						<text class="layout-txt m-r">{{item.phone}}</text>
+					</view>
+					<text class="layout-txt m-l m-t max">{{item.area}}{{item.address}}</text>
+					<view class="layout-1 layout-2 m-t">
+						<view class="layout-box">
+							<view class="layout-box" v-if="item.isDefault">
+								<radio class="m-l" checked="true" disabled="false" style="transform:scale(0.7)" />
+								<text class="lab">已设为默认地址</text>
+							</view>
+						</view>
+						<view class="layout-box m-r">
+							<view class="line2"></view>
+							
+							<!-- #ifdef APP || APP-PLUS -->
+							<view class="layout-box" @touchmove.stop.prevent="edit(item)" >
+								<image class="pic m-l" src="../../static/pic/ic_address_edit.png"></image>
+								<text class="lab">编辑</text>
+							</view>
+							<!-- #endif -->
+							<!-- #ifndef APP || APP-PLUS -->
+							<view class="layout-box" @click.stop.prevent="edit(item)" >
+								<image class="pic m-l" src="../../static/pic/ic_address_edit.png"></image>
+								<text class="lab">编辑</text>
+							</view>
+							<!-- #endif -->
+							<view class="line2 m-l"></view>
+							<!-- #ifdef APP || APP-PLUS -->
+							<view class="layout-box" @touchmove.stop.prevent="del(item,index)">
+								<image class="pic m-l" src="../../static/pic/ic_address_del.png"></image>
+								<text class="lab">删除</text>
+							</view>
+							<!-- #endif -->
+							<!-- #ifndef APP || APP-PLUS -->
+							<view class="layout-box" @click.stop.prevent="del(item,index)">
+								<image class="pic m-l" src="../../static/pic/ic_address_del.png"></image>
+								<text class="lab">删除</text>
+							</view>
+							<!-- #endif -->
+						</view>
+					</view>
+				</view>
+				<view slot="footer" class="list-footer"></view>
+			</uni-list-item>
+		</uni-list>
+		<view class="add-layout column">
+			<text class="add-btn" v-on:click="add()">新增地址</text>
+		</view>
+	</view>
+</template>
+
+<script>
+	export default {
+		data () {
+			return {
+				from: 0, // 0或undefined表示我的；1表示确认订单
+				list: [
+					{ id: "1", name: "张三1", phone: "17744445555", area: "上海市上海市黄浦区", address: "金钟街道淮海中路630号金钟广场29楼2301", code: "100000", isDefault: true },
+					{ id: "2", name: "张三2", phone: "17744445559", area: "上海市上海市黄浦区", address: "金钟广场33楼", code: "", isDefault: false },
+					{ id: "3", name: "张三43", phone: "17744445551", area: "上海市上海市黄浦区", address: "金钟广场333楼", code: "", isDefault: false },
+					{ id: "4", name: "张三5", phone: "17744445550", area: "上海市上海市黄浦区", address: "金钟广场133楼", code: "", isDefault: false },
+					{ id: "5", name: "张三6", phone: "17744445552", area: "上海市上海市黄浦区", address: "金钟广场323楼", code: "", isDefault: false },
+					{ id: "6", name: "张三张三", phone: "17744445553", area: "上海市上海市黄浦区", address: "金钟广场313楼", code: "", isDefault: false },
+					{ id: "7", name: "张三张三6", phone: "17744445554", area: "上海市上海市黄浦区", address: "金钟广场3311楼", code: "", isDefault: false },
+					{ id: "8", name: "张三24", phone: "17744445500", area: "上海市上海市黄浦区", address: "金钟广场1133楼", code: "", isDefault: false }
+				]
+			}
+		},
+		methods: {
+			itemClick: function(item) {
+				if(this.from == 1) {
+					this.getEventChannel().emit('onAddressResult', item)
+					uni.navigateBack({
+					})
+				}
+			},
+			edit: function (item) {
+				uni.navigateTo({
+					url: '/pages/my/address_edit?isAdd=2',
+					events: {
+						// 为指定事件添加一个监听器，获取被打开页面传送到当前页面的数据，可以添加多个
+						onActivityResult: function(data) { // 这里类似 Activity 中的 onActivityResult
+						  console.log("onActivityResult --->" + data.data)
+						}
+					},
+					success: (res) => {
+						// var json = encodeURIComponent(JSON.stringify(item)) 中文转码
+						var json = JSON.stringify(item)
+						console.log("通过eventChannel向被打开页面传送数据 --->" + json)
+						// 通过eventChannel向被打开页面传送数据
+						res.eventChannel.emit('getAddressBean', json)
+					}
+				})
+			},
+			del: function (item, index) {
+				var that = this
+				uni.showModal({
+					title: "温馨提示",
+					content: "确定要删除吗？",
+					confirmText: "删除",
+					confirmColor: "#FF5A5F",
+					success: (option) => {
+						if (option.confirm) {
+							that.list.splice(index, 1)
+						}
+					}
+				})
+			},
+			add: function () {
+				uni.navigateTo({
+					url: '/pages/my/address_edit?isAdd=1'
+				})
+			},
+			getEventChannel: function() { // 获取 eventChannel
+				// #ifdef APP-NVUE
+				const eventChannel = this.$scope.eventChannel; // 兼容APP-NVUE
+				// #endif
+				// #ifndef APP-NVUE
+				const eventChannel = this.getOpenerEventChannel();
+				// #endif
+				return eventChannel
+			}
+		},
+		onPullDownRefresh() { // 下拉刷新
+			var that = this
+			setTimeout(() => {
+				uni.stopPullDownRefresh()
+			}, 500)
+		},
+		onLoad:function(option){
+			this.from = option.from
+			console.log("from ---> " + this.from)
+		}
+	}
+</script>
+
+<style lang="scss">
+	$add-layout-height: 60px;
+
+	.list {
+		margin-bottom: $add-layout-height;
+		
+		.list-body {
+			background-color: #FFFFFF;
+			
+			.layout-txt {
+				color: #000000;
+				font-size: 14px;
+			}
+			
+			.layout-1 {
+				display: flex;
+				flex-direction: row;
+			}
+			.layout-2 {
+				height: 40px;
+				justify-content: space-between;
+				border-top-color: #F2F2F2;
+				border-top-width: 1px;
+				
+				.layout-box {
+					flex-direction: row;
+					justify-content: center;
+					align-items: center;
+					height: 40px;
+					
+					.line2 {
+						height: 40px;
+						width: 1px;
+						background-color: #F2F2F2;
+					}
+					
+					.pic {
+						width: 15px;
+						height: 15px;
+						margin-right: 3px;
+					}
+					
+					.lab {
+						color: #91919C;
+						font-size: 14px;
+						line-height: 40px;
+					}
+				}
+			}
+		}
+		
+		.list-footer {
+			// 模拟实现 13px的分割线
+			height: 10px;
+			display: flex;
+			background-color: $uni-bg-color;
+		}
+	}
+
+	.add-layout {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: $add-layout-height;
+		border-top-color: $uni-bg-color;
+		border-top-width: 1px;
+		background-color: #FFFFFF;
+
+		.add-btn {
+			position: absolute;
+			left: 13px;
+			right: 13px;
+			top: 10px;
+			bottom: 10px;
+			color: #FFFFFF;
+			font-size: 14px;
+			background-color: #007AFF;
+			border-radius: 3px;
+			text-align: center;
+			line-height: 40px;
+		}
+	}
+</style>
